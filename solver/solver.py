@@ -18,9 +18,9 @@ class BoardSolver:
     def rendered_results(self) -> list[PathResult]:
         results = []
         for key, value in self.hot_zones.items():
-            print(key, value)
-            color = Color.RED
-            print(list(key))
+            colors = [color for color in Color]
+            path_size = len(key)
+            color = colors[path_size % len(colors)] 
             result = PathResult(
                 tiles=list(key), darkness=value, color=color, label=str(value)
             )
