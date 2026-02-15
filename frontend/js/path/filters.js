@@ -65,6 +65,11 @@ function getPathWord(path) {
 
 function isPathVisible(path) {
   if (activeLengths.size > 0 && !activeLengths.has((path.tiles || []).length)) return false;
-  if (searchText && getPathWord(path).toUpperCase().indexOf(searchText.toUpperCase()) === -1) return false;
+  if (searchText) {
+    var word = getPathWord(path).toUpperCase();
+    var query = searchText.toUpperCase();
+    var revQuery = query.split('').reverse().join('');
+    if (word.indexOf(query) === -1 && word.indexOf(revQuery) === -1) return false;
+  }
   return true;
 }

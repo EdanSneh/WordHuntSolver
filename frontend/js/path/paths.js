@@ -10,35 +10,90 @@ function renderSVG() {
   svg.setAttribute('viewBox', '0 0 ' + wrapperRect.width + ' ' + wrapperRect.height);
   svg.innerHTML = '';
 
-  paths.forEach(function(path, idx) {
-    if (!path.tiles || path.tiles.length < 2) return;
-    if (!isPathVisible(path)) return;
-    var color = hslColor(path.color, path.darkness);
-    var isHighlighted = idx === highlightedIdx;
+  if (highlightedIdx >= 0 && paths[highlightedIdx]) {
+    var selectedPath = paths[highlightedIdx];
 
-    var points = path.tiles.map(function(tc) {
-      var pt = getTileCenter(tc[0], tc[1]);
-      return pt.x + ',' + pt.y;
-    }).join(' ');
+    // Draw the selected hot zone path highlighted
+    if (selectedPath.tiles && selectedPath.tiles.length >= 2) {
+      var hotColor = hslColor(selectedPath.color, selectedPath.darkness);
+      var hotPoints = selectedPath.tiles.map(function(tc) {
+        var pt = getTileCenter(tc[0], tc[1]);
+        return pt.x + ',' + pt.y;
+      }).join(' ');
 
-    var polyline = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
-    polyline.setAttribute('points', points);
-    polyline.setAttribute('stroke', color);
-    polyline.setAttribute('stroke-width', isHighlighted ? '7' : '3.5');
-    polyline.setAttribute('stroke-opacity', isHighlighted ? '1' : '0.75');
-    if (isHighlighted) polyline.classList.add('highlighted');
-    svg.appendChild(polyline);
+      var hotLine = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+      hotLine.setAttribute('points', hotPoints);
+      hotLine.setAttribute('stroke', hotColor);
+      hotLine.setAttribute('stroke-width', '7');
+      hotLine.setAttribute('stroke-opacity', '1');
+      hotLine.classList.add('highlighted');
+      svg.appendChild(hotLine);
+    }
 
-    var startPt = getTileCenter(path.tiles[0][0], path.tiles[0][1]);
-    var label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-    label.setAttribute('x', startPt.x + 12);
-    label.setAttribute('y', startPt.y - 10);
-    label.setAttribute('fill', color);
-    label.setAttribute('font-size', isHighlighted ? '13' : '11');
-    label.setAttribute('font-weight', '700');
-    label.textContent = path.label || '';
-    svg.appendChild(label);
-  });
+    // Draw associated word paths on top
+    var wordIdSet = new Set(selectedPath.word_ids || []);
+    var colorHues = [0, 30, 55, 120, 180, 220, 275, 330];
+    var wordIdx = 0;
+    words.forEach(function(word) {
+      if (!wordIdSet.has(word.id)) return;
+      if (!word.tiles || word.tiles.length < 2) return;
+      var hue = colorHues[wordIdx % colorHues.length];
+      var color = 'hsl(' + hue + ', 90%, 45%)';
+
+      var points = word.tiles.map(function(tc) {
+        var pt = getTileCenter(tc[0], tc[1]);
+        return pt.x + ',' + pt.y;
+      }).join(' ');
+
+      var polyline = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+      polyline.setAttribute('points', points);
+      polyline.setAttribute('stroke', color);
+      polyline.setAttribute('stroke-width', '5');
+      polyline.setAttribute('stroke-opacity', '0.9');
+      svg.appendChild(polyline);
+
+      var startPt = getTileCenter(word.tiles[0][0], word.tiles[0][1]);
+      var label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      label.setAttribute('x', startPt.x + 12);
+      label.setAttribute('y', startPt.y - 10);
+      label.setAttribute('fill', color);
+      label.setAttribute('font-size', '13');
+      label.setAttribute('font-weight', '700');
+      label.textContent = word.label;
+      svg.appendChild(label);
+
+      wordIdx++;
+    });
+  } else {
+    // Default: draw hot zone paths
+    paths.forEach(function(path, idx) {
+      if (!path.tiles || path.tiles.length < 2) return;
+      if (!isPathVisible(path)) return;
+      var color = hslColor(path.color, path.darkness);
+
+      var points = path.tiles.map(function(tc) {
+        var pt = getTileCenter(tc[0], tc[1]);
+        return pt.x + ',' + pt.y;
+      }).join(' ');
+
+      var polyline = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+      polyline.setAttribute('points', points);
+      polyline.setAttribute('stroke', color);
+      polyline.setAttribute('stroke-width', '3.5');
+      polyline.setAttribute('stroke-opacity', '0.75');
+      svg.appendChild(polyline);
+
+      var startPt = getTileCenter(path.tiles[0][0], path.tiles[0][1]);
+      var label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      label.setAttribute('x', startPt.x + 12);
+      label.setAttribute('y', startPt.y - 10);
+      label.setAttribute('fill', color);
+      label.setAttribute('font-size', '11');
+      label.setAttribute('font-weight', '700');
+      label.textContent = path.label || '';
+      svg.appendChild(label);
+    });
+  }
 }
 
 function renderPathList() {
