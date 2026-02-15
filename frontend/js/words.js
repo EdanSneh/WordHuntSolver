@@ -5,10 +5,12 @@ var selectedWordIdx = -1;
 function renderWordList() {
   var panel = document.getElementById('wordsPanel');
   var list = document.getElementById('wordList');
+  var countEl = document.getElementById('wordCount');
 
   if (words.length === 0) {
     panel.classList.add('hidden');
     list.innerHTML = '<li class="no-paths">No words found yet.</li>';
+    countEl.classList.add('hidden');
     return;
   }
 
@@ -22,15 +24,18 @@ function renderWordList() {
   if (associatedIds && associatedIds.size === 0) {
     panel.classList.add('hidden');
     list.innerHTML = '';
+    countEl.classList.add('hidden');
     return;
   }
 
   panel.classList.remove('hidden');
   list.innerHTML = '';
+  var visibleCount = 0;
 
   words.forEach(function(word, idx) {
     // Filter: only show associated words when a path is selected
     if (associatedIds && !associatedIds.has(word.id)) return;
+    visibleCount++;
 
     var li = document.createElement('li');
     li.className = 'word-item';
@@ -58,6 +63,8 @@ function renderWordList() {
     li.appendChild(lengthSpan);
     list.appendChild(li);
   });
+  countEl.textContent = visibleCount;
+  countEl.classList.remove('hidden');
 }
 
 function updateHighlightedWordTiles() {

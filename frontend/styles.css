@@ -258,6 +258,9 @@ body {
   margin-bottom: 12px;
   border-bottom: 1px solid #0f3460;
   padding-bottom: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 .path-list { list-style: none; }
 .path-item {
@@ -464,8 +467,22 @@ body {
   margin-bottom: 12px;
   border-bottom: 1px solid #0f3460;
   padding-bottom: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 .words-panel.hidden { display: none; }
+.panel-count {
+  font-size: 12px;
+  font-weight: 600;
+  color: #fff;
+  border: 1.5px solid rgba(255,255,255,0.4);
+  padding: 1px 8px;
+  border-radius: 10px;
+  min-width: 24px;
+  text-align: center;
+}
+.panel-count.hidden { display: none; }
 .words-panel::-webkit-scrollbar { width: 6px; }
 .words-panel::-webkit-scrollbar-track { background: transparent; }
 .words-panel::-webkit-scrollbar-thumb { background: #334; border-radius: 3px; }

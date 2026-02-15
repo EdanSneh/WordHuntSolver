@@ -163,13 +163,17 @@ function renderSVG() {
 
 function renderPathList() {
   var list = document.getElementById('pathList');
+  var countEl = document.getElementById('pathCount');
   if (paths.length === 0) {
     list.innerHTML = '<li class="no-paths">No paths yet. Fill the board and click Solve.</li>';
+    countEl.classList.add('hidden');
     return;
   }
   list.innerHTML = '';
+  var visibleCount = 0;
   paths.forEach(function(path, idx) {
     if (!isPathVisible(path)) return;
+    visibleCount++;
     var li = document.createElement('li');
     li.className = 'path-item' + (idx === highlightedIdx ? ' active' : '');
     (function(i) {
@@ -209,6 +213,8 @@ function renderPathList() {
     li.appendChild(brSpan);
     list.appendChild(li);
   });
+  countEl.textContent = visibleCount;
+  countEl.classList.remove('hidden');
 }
 
 function clearPaths() {
