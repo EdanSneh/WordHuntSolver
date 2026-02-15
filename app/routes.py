@@ -1,7 +1,6 @@
-from fastapi import FastAPI
-
 from app.models import SolveRequest, SolveResponse
-from solver import solve_board
+from fastapi import FastAPI
+from solver import BoardSolver
 
 
 def register_routes(app: FastAPI):
@@ -12,5 +11,6 @@ def register_routes(app: FastAPI):
 
     @app.post("/solve", response_model=SolveResponse)
     def solve(request: SolveRequest):
-        paths = solve_board(request.grid, request.size)
-        return SolveResponse(paths=paths)
+        board_solver = BoardSolver(request.grid, request.size)
+        # paths = BoardSolver.solve_board()
+        return SolveResponse(paths=board_solver.rendered_results)

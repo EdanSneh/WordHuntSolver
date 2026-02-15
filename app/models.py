@@ -1,4 +1,5 @@
 from enum import Enum
+
 from pydantic import BaseModel
 
 
@@ -15,14 +16,14 @@ class Color(str, Enum):
 
 class SolveRequest(BaseModel):
     grid: list[list[str]]  # NxN grid of single uppercase characters
-    size: int              # 4 or 5
+    size: int  # 4 or 5
 
 
 class PathResult(BaseModel):
     tiles: list[list[int]]  # list of [row, col] pairs forming the path
-    brightness: int         # 1-100, controls line color lightness
-    color: Color            # line color
-    label: str              # display label (typically the word found)
+    darkness: int  # 1-100, controls line color darkness (higher = darker)
+    color: Color  # line color
+    label: str  # display label (typically the word found)
 
 
 class SolveResponse(BaseModel):

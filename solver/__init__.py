@@ -1,3 +1,4 @@
-from solver.solver import solve_board
+from solver.solver import BoardSolver
+from solver.trie import Trie
 
-__all__ = ["solve_board"]
+__all__ = ["BoardSolver"]

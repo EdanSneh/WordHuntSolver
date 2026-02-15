@@ -428,9 +428,11 @@ const COLOR_HUES = {
   CYAN: 180, BLUE: 220, PURPLE: 275, PINK: 330
 };
 
-function hslColor(colorEnum, brightness) {
+function hslColor(colorEnum, darkness) {
   const hue = COLOR_HUES[colorEnum] != null ? COLOR_HUES[colorEnum] : 0;
-  return 'hsl(' + hue + ', 90%, ' + brightness + '%)';
+  // Map darkness 1-100 to lightness 65%-25% (brighter to darker, always visible)
+  const lightness = 65 - (darkness / 100) * 40;
+  return 'hsl(' + hue + ', 90%, ' + lightness + '%)';
 }
 
 // Init
@@ -652,7 +654,7 @@ function renderSVG() {
 
   paths.forEach(function(path, idx) {
     if (!path.tiles || path.tiles.length < 2) return;
-    const color = hslColor(path.color, path.brightness);
+    const color = hslColor(path.color, path.darkness);
     const isHighlighted = idx === highlightedIdx;
 
     const points = path.tiles.map(function(tc) {
@@ -703,7 +705,7 @@ function renderPathList() {
     // Color swatch
     const swatch = document.createElement('span');
     swatch.className = 'color-swatch';
-    swatch.style.background = hslColor(path.color, path.brightness);
+    swatch.style.background = hslColor(path.color, path.darkness);
 
     // Label
     const labelSpan = document.createElement('span');
@@ -721,7 +723,7 @@ function renderPathList() {
     // Brightness
     const brSpan = document.createElement('span');
     brSpan.className = 'path-brightness';
-    brSpan.textContent = path.brightness;
+    brSpan.textContent = path.darkness;
 
     li.appendChild(swatch);
     li.appendChild(labelSpan);
