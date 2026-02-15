@@ -15,25 +15,46 @@ function renderLengthFilters() {
   container.classList.remove('hidden');
   container.innerHTML = '';
 
-  var allBtn = document.createElement('button');
-  allBtn.className = 'btn-len' + (activeLengths.size === 0 ? ' active' : '');
-  allBtn.textContent = 'All';
-  allBtn.addEventListener('click', function() {
-    activeLengths.clear();
-    highlightedIdx = -1;
-    renderLengthFilters();
-    renderPathList();
-    renderSVG();
-  });
-  container.appendChild(allBtn);
+  var btnRow = document.createElement('div');
+  btnRow.className = 'filter-btn-row';
 
   sorted.forEach(function(len) {
     var btn = document.createElement('button');
     btn.className = 'btn-len' + (activeLengths.has(len) ? ' active' : '');
     btn.textContent = len + ' tiles';
     btn.addEventListener('click', function() { toggleLength(len); });
-    container.appendChild(btn);
+    btnRow.appendChild(btn);
   });
+  container.appendChild(btnRow);
+
+  var linkRow = document.createElement('div');
+  linkRow.className = 'filter-link-row';
+
+  var selectAllBtn = document.createElement('button');
+  selectAllBtn.className = 'btn-len-link';
+  selectAllBtn.textContent = 'Select All';
+  selectAllBtn.addEventListener('click', function() {
+    sorted.forEach(function(len) { activeLengths.add(len); });
+    highlightedIdx = -1;
+    renderLengthFilters();
+    renderPathList();
+    renderSVG();
+  });
+  linkRow.appendChild(selectAllBtn);
+
+  var clearAllBtn = document.createElement('button');
+  clearAllBtn.className = 'btn-len-link';
+  clearAllBtn.textContent = 'Clear All';
+  clearAllBtn.addEventListener('click', function() {
+    activeLengths.clear();
+    highlightedIdx = -1;
+    renderLengthFilters();
+    renderPathList();
+    renderSVG();
+  });
+  linkRow.appendChild(clearAllBtn);
+
+  container.appendChild(linkRow);
 }
 
 function toggleLength(len) {
@@ -64,7 +85,7 @@ function getPathWord(path) {
 }
 
 function isPathVisible(path) {
-  if (activeLengths.size > 0 && !activeLengths.has((path.tiles || []).length)) return false;
+  if (!activeLengths.has((path.tiles || []).length)) return false;
   if (searchText) {
     var word = getPathWord(path).toUpperCase();
     var query = searchText.toUpperCase();

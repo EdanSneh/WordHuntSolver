@@ -4,9 +4,9 @@ from pydantic import BaseModel
 
 
 class Color(str, Enum):
-    RED = "RED"
-    ORANGE = "ORANGE"
     YELLOW = "YELLOW"
+    ORANGE = "ORANGE"
+    RED = "RED"
     GREEN = "GREEN"
     CYAN = "CYAN"
     BLUE = "BLUE"

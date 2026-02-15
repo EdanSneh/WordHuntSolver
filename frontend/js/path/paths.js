@@ -50,7 +50,17 @@ function renderSVG() {
     var selectedPath = paths[highlightedIdx];
 
     // Draw the selected hot zone path highlighted
-    if (selectedPath.tiles && selectedPath.tiles.length >= 2) {
+    if (selectedPath.tiles && selectedPath.tiles.length === 1) {
+      var hotColor = hslColor(selectedPath.color);
+      var pt = getTileCenter(selectedPath.tiles[0][0], selectedPath.tiles[0][1]);
+      var dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      dot.setAttribute('cx', pt.x);
+      dot.setAttribute('cy', pt.y);
+      dot.setAttribute('r', '7');
+      dot.setAttribute('fill', hotColor);
+      dot.classList.add('highlighted');
+      svg.appendChild(dot);
+    } else if (selectedPath.tiles && selectedPath.tiles.length >= 2) {
       var hotColor = hslColor(selectedPath.color);
       var hotPoints = selectedPath.tiles.map(function(tc) {
         var pt = getTileCenter(tc[0], tc[1]);
@@ -103,22 +113,33 @@ function renderSVG() {
     // Default: draw hot zone paths (only if no word is selected either)
     var range = getVisibleDarknessRange();
     paths.forEach(function(path, idx) {
-      if (!path.tiles || path.tiles.length < 2) return;
+      if (!path.tiles || path.tiles.length < 1) return;
       if (!isPathVisible(path)) return;
       var color = hslColor(path.color);
       var opacity = darknessToOpacity(path.darkness, range.minD, range.maxD);
 
-      var points = path.tiles.map(function(tc) {
-        var pt = getTileCenter(tc[0], tc[1]);
-        return pt.x + ',' + pt.y;
-      }).join(' ');
+      if (path.tiles.length === 1) {
+        var pt = getTileCenter(path.tiles[0][0], path.tiles[0][1]);
+        var dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        dot.setAttribute('cx', pt.x);
+        dot.setAttribute('cy', pt.y);
+        dot.setAttribute('r', '5');
+        dot.setAttribute('fill', color);
+        dot.setAttribute('fill-opacity', String(opacity));
+        svg.appendChild(dot);
+      } else {
+        var points = path.tiles.map(function(tc) {
+          var pt = getTileCenter(tc[0], tc[1]);
+          return pt.x + ',' + pt.y;
+        }).join(' ');
 
-      var polyline = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
-      polyline.setAttribute('points', points);
-      polyline.setAttribute('stroke', color);
-      polyline.setAttribute('stroke-width', '3.5');
-      polyline.setAttribute('stroke-opacity', String(opacity));
-      svg.appendChild(polyline);
+        var polyline = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+        polyline.setAttribute('points', points);
+        polyline.setAttribute('stroke', color);
+        polyline.setAttribute('stroke-width', '3.5');
+        polyline.setAttribute('stroke-opacity', String(opacity));
+        svg.appendChild(polyline);
+      }
 
       var startPt = getTileCenter(path.tiles[0][0], path.tiles[0][1]);
       var label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
@@ -186,6 +207,7 @@ function renderPathList() {
   list.innerHTML = '';
   var visibleCount = 0;
   var range = getVisibleDarknessRange();
+
   paths.forEach(function(path, idx) {
     if (!isPathVisible(path)) return;
     visibleCount++;

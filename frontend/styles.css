@@ -334,11 +334,20 @@ body {
 /* Length Filter Buttons */
 .length-filters {
   display: flex;
-  gap: 4px;
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: 6px;
   margin-bottom: 12px;
   padding-bottom: 10px;
   border-bottom: 1px solid #0f3460;
+}
+.filter-btn-row {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+.filter-link-row {
+  display: flex;
+  gap: 8px;
 }
 .length-filters.hidden { display: none; }
 .search-filter {
@@ -378,6 +387,19 @@ body {
   color: #fff;
   border-color: #4a8fe7;
 }
+.btn-len-link {
+  -webkit-appearance: none;
+  appearance: none;
+  background: none;
+  border: none;
+  padding: 4px 6px;
+  font-size: 11px;
+  font-family: inherit;
+  color: #8899aa;
+  cursor: pointer;
+  text-decoration: underline;
+}
+.btn-len-link:hover { color: #c8d6e5; }
 
 /* History Section */
 .history-panel {
