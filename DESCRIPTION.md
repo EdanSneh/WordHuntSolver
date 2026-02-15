@@ -6,17 +6,24 @@ A word hunt board visualizer and solver consisting of a single-file HTML fronten
 
 ```
 wordhunt/
-├── wordhunt.html      # Frontend — single HTML/CSS/JS file, zero dependencies
-├── server.py          # Backend — FastAPI app with boilerplate solver
-├── requirements.txt   # Python deps: fastapi, uvicorn
-└── DESCRIPTION.md     # This file
+├── app/
+│   ├── __init__.py        # FastAPI app creation + CORS + static file serving
+│   ├── models.py          # Pydantic models & Color enum
+│   └── routes.py          # /health and /solve endpoints
+├── solver/
+│   ├── __init__.py        # Re-exports solve_board
+│   └── solver.py          # Board-solving algorithm (stub)
+├── frontend/
+│   └── index.html         # Frontend — single HTML/CSS/JS file, zero dependencies
+├── requirements.txt       # Python deps: fastapi, uvicorn
+└── DESCRIPTION.md         # This file
 ```
 
 ## What It Does
 
 The user enters letters into an NxN grid (4×4 or 5×5) styled like a Word Hunt game board (wood-grain tiles, green background). Clicking "Solve" sends the grid to the backend, which returns word paths. The frontend draws those paths as colored SVG lines on the board and lists them in a side panel.
 
-## Frontend (`wordhunt.html`)
+## Frontend (`frontend/index.html`)
 
 ### Board & Letter Input
 - CSS grid of wood-styled tiles (CSS gradients, no images)
@@ -72,13 +79,13 @@ At the top of the `<script>`:
 const API_URL = 'http://localhost:8000';
 ```
 
-## Backend (`server.py`)
+## Backend (`app/`)
 
 ### Tech
 - **FastAPI** with CORS middleware (allows all origins for local dev)
 - **Pydantic** models for request/response validation
 
-### Models
+### Models (`app/models.py`)
 ```python
 class Color(str, Enum):       # RED, ORANGE, YELLOW, GREEN, CYAN, BLUE, PURPLE, PINK
 class SolveRequest(BaseModel): # grid: list[list[str]], size: int
@@ -86,24 +93,25 @@ class PathResult(BaseModel):   # tiles: list[list[int]], brightness: int, color:
 class SolveResponse(BaseModel): # paths: list[PathResult]
 ```
 
-### Endpoints
+### Endpoints (`app/routes.py`)
 | Method | Path      | Description                              |
 |--------|-----------|------------------------------------------|
 | GET    | `/health` | Returns `{"status": "ok"}`               |
 | POST   | `/solve`  | Accepts `SolveRequest`, returns `SolveResponse` |
 
-### Solver Stub
-The `solve_board(grid, size)` function in `server.py` currently returns an empty list. This is where you implement the actual word-finding algorithm (DFS/BFS over the grid with a dictionary).
+## Solver (`solver/`)
+
+The `solve_board(grid, size)` function in `solver/solver.py` currently returns an empty list. This is where you implement the actual word-finding algorithm (DFS/BFS over the grid with a dictionary).
 
 ## Running
 
 ```bash
 cd wordhunt
 pip install -r requirements.txt
-uvicorn server:app --reload
+uvicorn app:app --reload
 ```
 
-Then open `wordhunt.html` in a browser (just double-click or `open wordhunt.html`).
+Then open `frontend/wordhunt.html` in a browser (just double-click or `open frontend/wordhunt.html`).
 
 ## Key Implementation Notes
 
