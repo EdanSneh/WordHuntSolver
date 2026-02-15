@@ -399,7 +399,7 @@
     <button class="btn btn-size" data-size="5" onclick="setGridSize(5)">5&times;5</button>
   </div>
   <button class="btn btn-solve" id="solveBtn" onclick="solve()">Solve</button>
-  <button class="btn btn-clear" onclick="clearPaths()">Clear Paths</button>
+  <button class="btn btn-clear" onclick="clearBoard()">Clear Letters</button>
 </div>
 
 <!-- Main Content -->
@@ -489,6 +489,12 @@ function hslColor(colorEnum, darkness) {
   return 'hsl(' + hue + ', 90%, ' + lightness + '%)';
 }
 
+// Persistence
+function saveState() {
+  localStorage.setItem('wh_gridSize', gridSize);
+  localStorage.setItem('wh_grid', JSON.stringify(grid));
+}
+
 // Init
 function initGrid() {
   grid = [];
@@ -502,6 +508,7 @@ function initGrid() {
   selectedCol = -1;
   clearPaths();
   renderBoard();
+  saveState();
 }
 
 function renderBoard() {
@@ -575,6 +582,7 @@ document.getElementById('hiddenInput').addEventListener('keydown', function(e) {
     grid[selectedRow][selectedCol] = '';
     renderBoard();
     renderSVG();
+    saveState();
     return;
   }
 
@@ -599,6 +607,7 @@ document.getElementById('hiddenInput').addEventListener('keydown', function(e) {
     advanceCursor();
     renderBoard();
     renderSVG();
+    saveState();
     return;
   }
 
@@ -688,6 +697,11 @@ function clearPaths() {
   updateSearchFilterVisibility();
   renderPathList();
   renderSVG();
+}
+
+// Clear Board (letters + paths)
+function clearBoard() {
+  initGrid();
 }
 
 // Get tile center coordinates relative to the board wrapper
@@ -891,8 +905,26 @@ function updateSearchFilterVisibility() {
 // Rerender SVG on resize
 window.addEventListener('resize', function() { renderSVG(); });
 
-// Boot
-initGrid();
+// Boot — restore saved state or start fresh
+(function() {
+  var savedSize = parseInt(localStorage.getItem('wh_gridSize'));
+  var savedGrid = localStorage.getItem('wh_grid');
+  if (savedSize && savedGrid) {
+    try {
+      var parsed = JSON.parse(savedGrid);
+      if (parsed.length === savedSize && parsed[0].length === savedSize) {
+        gridSize = savedSize;
+        grid = parsed;
+        document.querySelectorAll('.btn-size').forEach(function(b) {
+          b.classList.toggle('active', parseInt(b.dataset.size) === gridSize);
+        });
+        renderBoard();
+        return;
+      }
+    } catch(e) {}
+  }
+  initGrid();
+})();
 </script>
 </body>
 </html>
