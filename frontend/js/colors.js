@@ -1,14 +1,21 @@
-var COLOR_HUES = {
-  RED: 0, ORANGE: 30, YELLOW: 55, GREEN: 120,
-  CYAN: 180, BLUE: 220, PURPLE: 275, PINK: 330
+var COLORS = {
+  RED:    'hsl(0, 90%, 50%)',
+  ORANGE: 'hsl(30, 90%, 50%)',
+  YELLOW: 'hsla(55, 82%, 52%, 0.88)',
+  GREEN:  'hsla(120, 92%, 29%, 1.00)',
+  CYAN:   'hsla(180, 87%, 40%, 1.00)',
+  BLUE:   'hsl(220, 90%, 50%)',
+  PURPLE: 'hsl(275, 90%, 50%)',
+  PINK:   'hsl(330, 90%, 50%)'
 };
 
-var DARKNESS_K = 0.1;
+function hslColor(colorEnum) {
+  return COLORS[colorEnum] || 'hsl(0, 90%, 50%)';
+}
 
-function hslColor(colorEnum, darkness) {
-  var hue = COLOR_HUES[colorEnum] != null ? COLOR_HUES[colorEnum] : 0;
-  // Log curve with tunable k: lower k = more aggressive at low values
-  var t = Math.log(1 + darkness * DARKNESS_K) / Math.log(1 + 100 * DARKNESS_K);
-  var lightness = 75 - t * 50;
-  return 'hsl(' + hue + ', 90%, ' + lightness + '%)';
+function darknessToOpacity(darkness, minD, maxD) {
+  // Relative scale: minD -> 0.15, maxD -> 1.0
+  if (maxD <= minD) return 1;
+  var t = (darkness - minD) / (maxD - minD);
+  return 0.15 + t * 0.85;
 }

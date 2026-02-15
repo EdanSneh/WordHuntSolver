@@ -1,6 +1,17 @@
 var paths = [];
 var highlightedIdx = -1;
 
+function getVisibleDarknessRange() {
+  var minD = Infinity, maxD = -Infinity;
+  paths.forEach(function(path) {
+    if (!isPathVisible(path)) return;
+    if (path.darkness < minD) minD = path.darkness;
+    if (path.darkness > maxD) maxD = path.darkness;
+  });
+  if (minD === Infinity) { minD = 0; maxD = 1; }
+  return { minD: minD, maxD: maxD };
+}
+
 function drawArrowAt(svg, mx, my, angle, color) {
   var s = 14;
   var pts = [
@@ -40,7 +51,7 @@ function renderSVG() {
 
     // Draw the selected hot zone path highlighted
     if (selectedPath.tiles && selectedPath.tiles.length >= 2) {
-      var hotColor = hslColor(selectedPath.color, selectedPath.darkness);
+      var hotColor = hslColor(selectedPath.color);
       var hotPoints = selectedPath.tiles.map(function(tc) {
         var pt = getTileCenter(tc[0], tc[1]);
         return pt.x + ',' + pt.y;
@@ -90,10 +101,12 @@ function renderSVG() {
     });
   } else if (!hasSelectedWord) {
     // Default: draw hot zone paths (only if no word is selected either)
+    var range = getVisibleDarknessRange();
     paths.forEach(function(path, idx) {
       if (!path.tiles || path.tiles.length < 2) return;
       if (!isPathVisible(path)) return;
-      var color = hslColor(path.color, path.darkness);
+      var color = hslColor(path.color);
+      var opacity = darknessToOpacity(path.darkness, range.minD, range.maxD);
 
       var points = path.tiles.map(function(tc) {
         var pt = getTileCenter(tc[0], tc[1]);
@@ -104,7 +117,7 @@ function renderSVG() {
       polyline.setAttribute('points', points);
       polyline.setAttribute('stroke', color);
       polyline.setAttribute('stroke-width', '3.5');
-      polyline.setAttribute('stroke-opacity', '0.75');
+      polyline.setAttribute('stroke-opacity', String(opacity));
       svg.appendChild(polyline);
 
       var startPt = getTileCenter(path.tiles[0][0], path.tiles[0][1]);
@@ -114,6 +127,7 @@ function renderSVG() {
       label.setAttribute('fill', color);
       label.setAttribute('font-size', '11');
       label.setAttribute('font-weight', '700');
+      label.setAttribute('opacity', String(opacity));
       label.textContent = path.label || '';
       svg.appendChild(label);
     });
@@ -171,6 +185,7 @@ function renderPathList() {
   }
   list.innerHTML = '';
   var visibleCount = 0;
+  var range = getVisibleDarknessRange();
   paths.forEach(function(path, idx) {
     if (!isPathVisible(path)) return;
     visibleCount++;
@@ -190,7 +205,8 @@ function renderPathList() {
 
     var swatch = document.createElement('span');
     swatch.className = 'color-swatch';
-    swatch.style.background = hslColor(path.color, path.darkness);
+    swatch.style.background = hslColor(path.color);
+    swatch.style.opacity = darknessToOpacity(path.darkness, range.minD, range.maxD);
 
     var labelSpan = document.createElement('span');
     labelSpan.className = 'path-label';
