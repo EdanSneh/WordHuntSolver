@@ -1,5 +1,6 @@
 var words = [];
 var highlightedWordTiles = new Set();
+var selectedWordIdx = -1;
 
 function renderWordList() {
   var panel = document.getElementById('wordsPanel');
@@ -10,22 +11,40 @@ function renderWordList() {
     list.innerHTML = '<li class="no-paths">No words found yet.</li>';
     return;
   }
+
+  // Build set of associated word IDs from selected path
+  var associatedIds = null;
+  if (highlightedIdx >= 0 && paths[highlightedIdx]) {
+    associatedIds = new Set(paths[highlightedIdx].word_ids || []);
+  }
+
+  // If a path is selected but no words match, hide panel
+  if (associatedIds && associatedIds.size === 0) {
+    panel.classList.add('hidden');
+    list.innerHTML = '';
+    return;
+  }
+
   panel.classList.remove('hidden');
   list.innerHTML = '';
 
-  // Build set of associated word IDs from selected path
-  var associatedIds = new Set();
-  if (highlightedIdx >= 0 && paths[highlightedIdx]) {
-    var wids = paths[highlightedIdx].word_ids || [];
-    for (var j = 0; j < wids.length; j++) {
-      associatedIds.add(wids[j]);
-    }
-  }
+  words.forEach(function(word, idx) {
+    // Filter: only show associated words when a path is selected
+    if (associatedIds && !associatedIds.has(word.id)) return;
 
-  words.forEach(function(word) {
     var li = document.createElement('li');
     li.className = 'word-item';
-    if (associatedIds.has(word.id)) li.classList.add('associated');
+    if (idx === selectedWordIdx) li.classList.add('selected');
+
+    (function(i) {
+      li.addEventListener('click', function() {
+        selectedWordIdx = selectedWordIdx === i ? -1 : i;
+        updateHighlightedWordTiles();
+        renderWordList();
+        renderSVG();
+        renderBoard();
+      });
+    })(idx);
 
     var labelSpan = document.createElement('span');
     labelSpan.className = 'word-label';
@@ -43,6 +62,12 @@ function renderWordList() {
 
 function updateHighlightedWordTiles() {
   highlightedWordTiles.clear();
+  if (selectedWordIdx >= 0 && words[selectedWordIdx]) {
+    words[selectedWordIdx].tiles.forEach(function(tile) {
+      highlightedWordTiles.add(tile[0] + ',' + tile[1]);
+    });
+    return;
+  }
   if (highlightedIdx < 0 || !paths[highlightedIdx]) return;
 
   var wordIds = paths[highlightedIdx].word_ids || [];
@@ -59,6 +84,7 @@ function updateHighlightedWordTiles() {
 
 function clearWords() {
   words = [];
+  selectedWordIdx = -1;
   highlightedWordTiles.clear();
   renderWordList();
 }

@@ -479,11 +479,17 @@ body {
   border-radius: 6px;
   margin-bottom: 2px;
   border-left: 3px solid transparent;
+  cursor: pointer;
   transition: background 0.15s, border-color 0.15s;
 }
+.word-item:hover { background: rgba(255,255,255,0.05); }
 .word-item.associated {
   background: rgba(144, 238, 144, 0.12);
   border-left-color: #90ee90;
+}
+.word-item.selected {
+  background: rgba(220, 60, 60, 0.15);
+  border-left-color: #e04040;
 }
 .word-label {
   font-weight: 600;

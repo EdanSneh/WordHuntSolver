@@ -1,6 +1,29 @@
 var paths = [];
 var highlightedIdx = -1;
 
+function drawArrowAt(svg, mx, my, angle, color) {
+  var s = 14;
+  var pts = [
+    [-s, -s * 0.6],
+    [s, 0],
+    [-s, s * 0.6]
+  ];
+  var cosA = Math.cos(angle);
+  var sinA = Math.sin(angle);
+  var rotated = pts.map(function(p) {
+    return [mx + p[0] * cosA - p[1] * sinA, my + p[0] * sinA + p[1] * cosA];
+  });
+  var d = 'M' + rotated[0][0] + ' ' + rotated[0][1] +
+          'L' + rotated[1][0] + ' ' + rotated[1][1] +
+          'L' + rotated[2][0] + ' ' + rotated[2][1] + 'Z';
+  var arrow = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  arrow.setAttribute('d', d);
+  arrow.setAttribute('fill', '#fff');
+  arrow.setAttribute('stroke', color);
+  arrow.setAttribute('stroke-width', '1');
+  svg.appendChild(arrow);
+}
+
 function renderSVG() {
   var svg = document.getElementById('svgOverlay');
   var wrapper = document.querySelector('.board-wrapper');
@@ -9,6 +32,8 @@ function renderSVG() {
   svg.setAttribute('height', wrapperRect.height);
   svg.setAttribute('viewBox', '0 0 ' + wrapperRect.width + ' ' + wrapperRect.height);
   svg.innerHTML = '';
+
+  var hasSelectedWord = selectedWordIdx >= 0 && words[selectedWordIdx];
 
   if (highlightedIdx >= 0 && paths[highlightedIdx]) {
     var selectedPath = paths[highlightedIdx];
@@ -30,15 +55,15 @@ function renderSVG() {
       svg.appendChild(hotLine);
     }
 
-    // Draw associated word paths on top
+    // Draw associated word paths in red (skip the already-drawn selected word)
     var wordIdSet = new Set(selectedPath.word_ids || []);
-    var colorHues = [0, 30, 55, 120, 180, 220, 275, 330];
-    var wordIdx = 0;
-    words.forEach(function(word) {
+    var wordColor = 'hsl(0, 85%, 50%)';
+    var dimOpacity = hasSelectedWord ? '0.2' : '0.5';
+
+    words.forEach(function(word, idx) {
       if (!wordIdSet.has(word.id)) return;
       if (!word.tiles || word.tiles.length < 2) return;
-      var hue = colorHues[wordIdx % colorHues.length];
-      var color = 'hsl(' + hue + ', 90%, 45%)';
+      if (idx === selectedWordIdx) return; // drawn on top later
 
       var points = word.tiles.map(function(tc) {
         var pt = getTileCenter(tc[0], tc[1]);
@@ -47,25 +72,24 @@ function renderSVG() {
 
       var polyline = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
       polyline.setAttribute('points', points);
-      polyline.setAttribute('stroke', color);
-      polyline.setAttribute('stroke-width', '5');
-      polyline.setAttribute('stroke-opacity', '0.9');
+      polyline.setAttribute('stroke', wordColor);
+      polyline.setAttribute('stroke-width', '3.5');
+      polyline.setAttribute('stroke-opacity', dimOpacity);
       svg.appendChild(polyline);
 
       var startPt = getTileCenter(word.tiles[0][0], word.tiles[0][1]);
       var label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
       label.setAttribute('x', startPt.x + 12);
       label.setAttribute('y', startPt.y - 10);
-      label.setAttribute('fill', color);
-      label.setAttribute('font-size', '13');
+      label.setAttribute('fill', wordColor);
+      label.setAttribute('font-size', '12');
       label.setAttribute('font-weight', '700');
+      label.setAttribute('opacity', hasSelectedWord ? '0.25' : '0.6');
       label.textContent = word.label;
       svg.appendChild(label);
-
-      wordIdx++;
     });
-  } else {
-    // Default: draw hot zone paths
+  } else if (!hasSelectedWord) {
+    // Default: draw hot zone paths (only if no word is selected either)
     paths.forEach(function(path, idx) {
       if (!path.tiles || path.tiles.length < 2) return;
       if (!isPathVisible(path)) return;
@@ -94,6 +118,47 @@ function renderSVG() {
       svg.appendChild(label);
     });
   }
+
+  // Draw selected word path on top (works with or without a path selected)
+  if (hasSelectedWord) {
+    var selWord = words[selectedWordIdx];
+    if (selWord.tiles && selWord.tiles.length >= 2) {
+      var wc = 'hsl(0, 85%, 50%)';
+      var tilePts = selWord.tiles.map(function(tc) {
+        return getTileCenter(tc[0], tc[1]);
+      });
+
+      // Draw the line
+      var linePoints = tilePts.map(function(p) {
+        return p.x + ',' + p.y;
+      }).join(' ');
+      var polyline = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+      polyline.setAttribute('points', linePoints);
+      polyline.setAttribute('stroke', wc);
+      polyline.setAttribute('stroke-width', '6');
+      polyline.setAttribute('stroke-opacity', '1');
+      polyline.classList.add('highlighted');
+      svg.appendChild(polyline);
+
+      // Draw arrows at midpoints of each segment only
+      for (var k = 0; k < tilePts.length - 1; k++) {
+        var mx = (tilePts[k].x + tilePts[k + 1].x) / 2;
+        var my = (tilePts[k].y + tilePts[k + 1].y) / 2;
+        var angle = Math.atan2(tilePts[k + 1].y - tilePts[k].y, tilePts[k + 1].x - tilePts[k].x);
+        drawArrowAt(svg, mx, my, angle, wc);
+      }
+
+      var startPt = tilePts[0];
+      var label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      label.setAttribute('x', startPt.x + 12);
+      label.setAttribute('y', startPt.y - 10);
+      label.setAttribute('fill', wc);
+      label.setAttribute('font-size', '14');
+      label.setAttribute('font-weight', '700');
+      label.textContent = selWord.label;
+      svg.appendChild(label);
+    }
+  }
 }
 
 function renderPathList() {
@@ -110,6 +175,7 @@ function renderPathList() {
     (function(i) {
       li.addEventListener('click', function() {
         highlightedIdx = highlightedIdx === i ? -1 : i;
+        selectedWordIdx = -1;
         updateHighlightedWordTiles();
         renderPathList();
         renderWordList();
