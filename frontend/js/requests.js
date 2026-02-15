@@ -32,6 +32,7 @@ async function solve() {
     }
     var data = await resp.json();
     paths = Array.isArray(data) ? data : (data.paths || []);
+    words = data.words || [];
     highlightedIdx = -1;
     activeLengths.clear();
     searchText = '';
@@ -39,9 +40,10 @@ async function solve() {
     renderLengthFilters();
     updateSearchFilterVisibility();
     renderPathList();
+    renderWordList();
     renderSVG();
     playSuccessChime();
-    saveToHistory(grid.map(function(row) { return row.slice(); }), gridSize, paths.length);
+    saveToHistory(grid.map(function(row) { return row.slice(); }), gridSize, words.length);
   } catch (err) {
     showError('Solve failed: ' + err.message);
   } finally {

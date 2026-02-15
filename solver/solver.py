@@ -1,7 +1,7 @@
 from functools import cached_property
 from typing import Tuple
 
-from app.models import Color, PathResult
+from app.models import Color, PathResult, WordResult
 from solver.trie import Trie
 
 
@@ -15,66 +15,72 @@ class BoardSolver:
         self._solve_board()
 
     @cached_property
-    def rendered_results(self) -> list[PathResult]:
+    def rendered_words(self) -> list[WordResult]:
         results = []
-        for key, value in self.hot_zones.items():
-            colors = [color for color in Color]
-            path_size = len(key)
-            color = colors[path_size % len(colors)] 
-            result = PathResult(
-                tiles=list(key), darkness=value, color=color, label=str(value)
-            )
-            results.append(result)
-        results.sort(key=lambda r: -r.darkness)
-        print(results)
+        for word, path in self.valid_paths:
+            results.append(WordResult(id=0, tiles=[list(c) for c in path], label=word))
+        results.sort(key=lambda w: (-len(w.label), w.label))
+        for i, w in enumerate(results):
+            w.id = i
         return results
 
     @cached_property
-    def hot_zones(self) -> list[Tuple[int, int]]:
+    def hot_zones(self):
+        # Build word path -> word id lookup from rendered_words
+        word_id_by_path: dict[Tuple[Tuple[int, int], ...], int] = {}
+        for w in self.rendered_words:
+            key = tuple(tuple(t) for t in w.tiles)
+            word_id_by_path[key] = w.id
+
         hot_zone_dict: dict[Tuple[Tuple[int, int], ...], int] = {}
-        for path in self.valid_paths:
-            print(path)
+        word_ids_dict: dict[Tuple[Tuple[int, int], ...], set] = {}
+        for word_str, path in self.valid_paths:
+            word_id = word_id_by_path.get(path)
             for start in range(len(path)):
                 for end in range(start, len(path)):
                     sub_path = path[start : end + 1]
+
+                    #check if reverse exists
                     reverse_path = sub_path[::-1]
+                    if reverse_path in hot_zone_dict:
+                        sub_path = reverse_path
+
                     if sub_path not in hot_zone_dict:
                         hot_zone_dict[sub_path] = 0
-                        hot_zone_dict[reverse_path] = 0
+                        word_ids_dict.setdefault(sub_path, set())
                     hot_zone_dict[sub_path] += 1
-                    if sub_path != reverse_path:
-                        hot_zone_dict[reverse_path] += 1
-        return hot_zone_dict
+                    word_ids_dict[sub_path].add(word_id)
+        return hot_zone_dict, word_ids_dict
+
+    @cached_property
+    def rendered_results(self) -> list[PathResult]:
+        hot_zone_dict, word_ids_dict = self.hot_zones
+        results = []
+        colors = [color for color in Color]
+        for key, value in hot_zone_dict.items():
+            path_size = len(key)
+            color = colors[path_size % len(colors)]
+            result = PathResult(
+                id=0,
+                tiles=list(key),
+                darkness=value,
+                color=color,
+                label=str(value),
+                word_ids=sorted(word_ids_dict.get(key, set())),
+            )
+            results.append(result)
+        results.sort(key=lambda r: -r.darkness)
+        for i, r in enumerate(results):
+            r.id = i
+        return results
 
     def _solve_board(self):
-        """
-        Solve the word hunt board and return all valid word paths.
-
-        Args:
-            grid: NxN grid of single uppercase characters
-            size: grid dimension (4 or 5)
-
-        Returns:
-            List of PathResult objects, each representing a found word.
-
-        TODO: Implement your solver here. For each word found:
-            - tiles: sequence of [row, col] coordinates tracing the word
-            - brightness: 1-100 value for display intensity
-            - color: pick from Color enum
-            - label: the word string
-        """
-        # TODO: implement solver
-        """
-        1. For each tile do a BFS to find all possible words.
-        2. For each word 
-        """
         has_seen = []
-        for _ in range(self.size):  # cols
-            has_seen.append([False] * self.size)  # rows
+        for _ in range(self.size):
+            has_seen.append([False] * self.size)
         for y in range(self.size):
             for x in range(self.size):
                 self._bfs((x, y), [(x, y)], self.grid[x][y], has_seen)
-        return []
 
     def _bfs(
         self,
@@ -88,7 +94,7 @@ class BoardSolver:
             return
         if is_word and strpath not in self.seen_words and len(strpath) > 2:
             final_path = tuple(path)
-            self.valid_paths.append((final_path))
+            self.valid_paths.append((strpath, final_path))
             self.seen_words.add(strpath)
 
         edges = self._get_edges(node)

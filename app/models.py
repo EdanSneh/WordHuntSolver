@@ -19,12 +19,21 @@ class SolveRequest(BaseModel):
     size: int  # 4 or 5
 
 
+class WordResult(BaseModel):
+    id: int
+    tiles: list[list[int]]  # list of [row, col] pairs forming the word
+    label: str  # the word string
+
+
 class PathResult(BaseModel):
+    id: int
     tiles: list[list[int]]  # list of [row, col] pairs forming the path
     darkness: int  # 1-100, controls line color darkness (higher = darker)
     color: Color  # line color
     label: str  # display label (typically the word found)
+    word_ids: list[int]  # IDs of associated WordResults
 
 
 class SolveResponse(BaseModel):
     paths: list[PathResult]
+    words: list[WordResult]

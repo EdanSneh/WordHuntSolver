@@ -12,5 +12,7 @@ def register_routes(app: FastAPI):
     @app.post("/solve", response_model=SolveResponse)
     def solve(request: SolveRequest):
         board_solver = BoardSolver(request.grid, request.size)
-        # paths = BoardSolver.solve_board()
-        return SolveResponse(paths=board_solver.rendered_results)
+        return SolveResponse(
+            paths=board_solver.rendered_results,
+            words=board_solver.rendered_words,
+        )

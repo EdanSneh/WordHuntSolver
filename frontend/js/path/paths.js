@@ -55,8 +55,11 @@ function renderPathList() {
     (function(i) {
       li.addEventListener('click', function() {
         highlightedIdx = highlightedIdx === i ? -1 : i;
+        updateHighlightedWordTiles();
         renderPathList();
+        renderWordList();
         renderSVG();
+        renderBoard();
       });
     })(idx);
 
@@ -95,6 +98,7 @@ function clearPaths() {
   document.getElementById('searchInput').value = '';
   renderLengthFilters();
   updateSearchFilterVisibility();
+  clearWords();
   renderPathList();
   renderSVG();
 }

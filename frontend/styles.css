@@ -445,3 +445,66 @@ body {
 .right-panel::-webkit-scrollbar { width: 6px; }
 .right-panel::-webkit-scrollbar-track { background: transparent; }
 .right-panel::-webkit-scrollbar-thumb { background: #334; border-radius: 3px; }
+
+/* Words Panel */
+.words-panel {
+  background: #16213e;
+  border-radius: 12px;
+  padding: 16px;
+  min-width: 280px;
+  max-width: 360px;
+  max-height: calc(100vh - 120px);
+  overflow-y: auto;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+  border: 1px solid #0f3460;
+}
+.words-panel h2 {
+  font-size: 16px;
+  color: #90ee90;
+  margin-bottom: 12px;
+  border-bottom: 1px solid #0f3460;
+  padding-bottom: 8px;
+}
+.words-panel.hidden { display: none; }
+.words-panel::-webkit-scrollbar { width: 6px; }
+.words-panel::-webkit-scrollbar-track { background: transparent; }
+.words-panel::-webkit-scrollbar-thumb { background: #334; border-radius: 3px; }
+.word-list { list-style: none; }
+.word-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  margin-bottom: 2px;
+  border-left: 3px solid transparent;
+  transition: background 0.15s, border-color 0.15s;
+}
+.word-item.associated {
+  background: rgba(144, 238, 144, 0.12);
+  border-left-color: #90ee90;
+}
+.word-label {
+  font-weight: 600;
+  font-size: 14px;
+  color: #e0e0e0;
+  font-family: 'Courier New', monospace;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+.word-length {
+  font-size: 11px;
+  color: #667;
+  flex-shrink: 0;
+}
+
+/* Word highlight on board tiles */
+.tile.word-highlight {
+  border-color: #90ee90;
+  box-shadow:
+    inset 0 1px 2px rgba(255,255,255,0.25),
+    inset 0 -1px 2px rgba(0,0,0,0.1),
+    0 3px 6px rgba(0,0,0,0.35),
+    0 0 12px rgba(144, 238, 144, 0.6);
+}

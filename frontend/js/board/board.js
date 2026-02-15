@@ -25,6 +25,7 @@ function renderBoard() {
       var tile = document.createElement('div');
       tile.className = 'tile';
       if (r === selectedRow && c === selectedCol) tile.classList.add('selected');
+      if (highlightedWordTiles && highlightedWordTiles.has(r + ',' + c)) tile.classList.add('word-highlight');
       tile.textContent = grid[r][c];
       tile.dataset.row = r;
       tile.dataset.col = c;
