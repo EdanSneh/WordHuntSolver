@@ -335,6 +335,54 @@
     to { opacity: 1; transform: translateX(-50%) translateY(0); }
   }
 
+  /* Length Filter Buttons */
+  .length-filters {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #0f3460;
+  }
+  .length-filters.hidden { display: none; }
+  .search-filter {
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #0f3460;
+  }
+  .search-filter.hidden { display: none; }
+  .search-filter input {
+    width: 100%;
+    padding: 6px 10px;
+    border: 1px solid #2a4a7f;
+    border-radius: 4px;
+    font-size: 13px;
+    font-weight: 500;
+    background: #1a2a4a;
+    color: #e0e0e0;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .search-filter input::placeholder { color: #556; }
+  .search-filter input:focus { border-color: #4a8fe7; }
+  .btn-len {
+    padding: 4px 10px;
+    border: 1px solid #2a4a7f;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    background: #1a2a4a;
+    color: #8899aa;
+  }
+  .btn-len:hover { border-color: #4a8fe7; color: #c8d6e5; }
+  .btn-len.active {
+    background: #4a8fe7;
+    color: #fff;
+    border-color: #4a8fe7;
+  }
+
   /* Scrollbar */
   .right-panel::-webkit-scrollbar { width: 6px; }
   .right-panel::-webkit-scrollbar-track { background: transparent; }
@@ -363,6 +411,10 @@
   </div>
   <div class="right-panel">
     <h2>Found Words</h2>
+    <div class="length-filters hidden" id="lengthFilters"></div>
+    <div class="search-filter hidden" id="searchFilter">
+      <input type="text" id="searchInput" placeholder="Filter words..." autocomplete="off">
+    </div>
     <ul class="path-list" id="pathList">
       <li class="no-paths">No paths yet. Fill the board and click Solve.</li>
     </ul>
@@ -379,6 +431,8 @@ let selectedRow = -1;
 let selectedCol = -1;
 let paths = [];
 let highlightedIdx = -1;
+let activeLengths = new Set(); // empty = show all
+let searchText = '';
 
 // Audio
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -607,6 +661,11 @@ async function solve() {
     const data = await resp.json();
     paths = Array.isArray(data) ? data : (data.paths || []);
     highlightedIdx = -1;
+    activeLengths.clear();
+    searchText = '';
+    document.getElementById('searchInput').value = '';
+    renderLengthFilters();
+    updateSearchFilterVisibility();
     renderPathList();
     renderSVG();
     playSuccessChime();
@@ -622,6 +681,11 @@ async function solve() {
 function clearPaths() {
   paths = [];
   highlightedIdx = -1;
+  activeLengths.clear();
+  searchText = '';
+  document.getElementById('searchInput').value = '';
+  renderLengthFilters();
+  updateSearchFilterVisibility();
   renderPathList();
   renderSVG();
 }
@@ -654,6 +718,7 @@ function renderSVG() {
 
   paths.forEach(function(path, idx) {
     if (!path.tiles || path.tiles.length < 2) return;
+    if (!isPathVisible(path)) return;
     const color = hslColor(path.color, path.darkness);
     const isHighlighted = idx === highlightedIdx;
 
@@ -683,6 +748,67 @@ function renderSVG() {
   });
 }
 
+// Length filter
+function renderLengthFilters() {
+  const container = document.getElementById('lengthFilters');
+  const lengths = new Set(paths.map(function(p) { return (p.tiles || []).length; }));
+  const sorted = Array.from(lengths).sort(function(a, b) { return a - b; });
+
+  if (sorted.length === 0) {
+    container.classList.add('hidden');
+    container.innerHTML = '';
+    return;
+  }
+
+  container.classList.remove('hidden');
+  container.innerHTML = '';
+
+  // "All" button
+  var allBtn = document.createElement('button');
+  allBtn.className = 'btn-len' + (activeLengths.size === 0 ? ' active' : '');
+  allBtn.textContent = 'All';
+  allBtn.addEventListener('click', function() {
+    activeLengths.clear();
+    highlightedIdx = -1;
+    renderLengthFilters();
+    renderPathList();
+    renderSVG();
+  });
+  container.appendChild(allBtn);
+
+  sorted.forEach(function(len) {
+    var btn = document.createElement('button');
+    btn.className = 'btn-len' + (activeLengths.has(len) ? ' active' : '');
+    btn.textContent = len + ' tiles';
+    btn.addEventListener('click', function() { toggleLength(len); });
+    container.appendChild(btn);
+  });
+}
+
+function toggleLength(len) {
+  if (activeLengths.has(len)) {
+    activeLengths.delete(len);
+  } else {
+    activeLengths.add(len);
+  }
+  highlightedIdx = -1;
+  renderLengthFilters();
+  renderPathList();
+  renderSVG();
+}
+
+function getPathWord(path) {
+  return (path.tiles || []).map(function(tc) {
+    return (grid[tc[0]] && grid[tc[0]][tc[1]]) ? grid[tc[0]][tc[1]] : '?';
+  }).join('');
+}
+
+function isPathVisible(path) {
+  if (activeLengths.size > 0 && !activeLengths.has((path.tiles || []).length)) return false;
+  if (searchText && getPathWord(path).toUpperCase().indexOf(searchText.toUpperCase()) === -1) return false;
+  return true;
+}
+
 // Render path list
 function renderPathList() {
   const list = document.getElementById('pathList');
@@ -692,6 +818,7 @@ function renderPathList() {
   }
   list.innerHTML = '';
   paths.forEach(function(path, idx) {
+    if (!isPathVisible(path)) return;
     const li = document.createElement('li');
     li.className = 'path-item' + (idx === highlightedIdx ? ' active' : '');
     (function(i) {
@@ -742,6 +869,23 @@ function showError(msg) {
   toast.textContent = msg;
   document.body.appendChild(toast);
   setTimeout(function() { toast.remove(); }, 4000);
+}
+
+// Search filter
+document.getElementById('searchInput').addEventListener('input', function(e) {
+  searchText = e.target.value;
+  highlightedIdx = -1;
+  renderPathList();
+  renderSVG();
+});
+
+function updateSearchFilterVisibility() {
+  var container = document.getElementById('searchFilter');
+  if (paths.length === 0) {
+    container.classList.add('hidden');
+  } else {
+    container.classList.remove('hidden');
+  }
 }
 
 // Rerender SVG on resize
