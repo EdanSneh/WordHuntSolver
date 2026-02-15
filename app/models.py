@@ -6,7 +6,6 @@ from pydantic import BaseModel
 class Color(str, Enum):
     YELLOW = "YELLOW"
     ORANGE = "ORANGE"
-    RED = "RED"
     GREEN = "GREEN"
     CYAN = "CYAN"
     BLUE = "BLUE"

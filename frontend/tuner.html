@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Opacity Curve Tuner</title>
+<style>
+body{background:#1a1a2e;color:#e0e0e0;font-family:sans-serif;padding:24px}
+.controls{margin-bottom:16px;display:flex;gap:20px;align-items:center}
+label{font-size:14px;min-width:120px}
+input[type=range]{width:300px}
+.gradient-bar{height:50px;border-radius:6px;margin:16px 0}
+.swatches{display:flex;flex-wrap:wrap;gap:3px;margin-top:12px}
+.swatch{width:44px;height:44px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;text-shadow:0 0 3px #000}
+.info{margin-top:12px;font-size:12px;color:#8899aa;font-family:monospace;white-space:pre-wrap}
+h3{color:#90ee90;margin:24px 0 8px}
+.formula{background:#16213e;padding:12px;border-radius:6px;font-family:monospace;font-size:13px;margin:8px 0}
+</style>
+</head>
+<body>
+<h2>Darkness to Opacity Curve Tuner</h2>
+<div class="controls">
+<label>Min opacity: <strong id="minVal">0.15</strong></label>
+<input type="range" id="minSlider" min="0.05" max="0.5" step="0.01" value="0.15">
+</div>
+<div class="controls">
+<label>Exponent (p): <strong id="expVal">0.50</strong></label>
+<input type="range" id="expSlider" min="0.1" max="3.0" step="0.05" value="0.50">
+</div>
+<div class="controls">
+<label>Color:</label>
+<select id="colorSelect">
+<option value="0">Red</option>
+<option value="30">Orange</option>
+<option value="120" selected>Green</option>
+<option value="220">Blue</option>
+</select>
+</div>
+<div class="formula" id="formulaBox"></div>
+<h3>Gradient (darkness 1 to 100)</h3>
+<div class="gradient-bar" id="gradientBar"></div>
+<h3>Swatches</h3>
+<div class="swatches" id="swatches"></div>
+<h3>Values</h3>
+<div class="info" id="infoBox"></div>
+<script>
+var mS=document.getElementById('minSlider');
+var eS=document.getElementById('expSlider');
+var cS=document.getElementById('colorSelect');
+function calc(d,m,p){return m+Math.pow((d-1)/99,p)*(1-m);}
+function render(){
+  var m=parseFloat(mS.value),p=parseFloat(eS.value),h=parseInt(cS.value);
+  document.getElementById('minVal').textContent=m.toFixed(2);
+  document.getElementById('expVal').textContent=p.toFixed(2);
+  document.getElementById('formulaBox').textContent='opacity = '+m.toFixed(2)+' + ((d-1)/99)^'+p.toFixed(2)+' * '+(1-m).toFixed(2);
+  var sw=document.getElementById('swatches');
+  sw.innerHTML='';
+  var stops=[],info=[];
+  var show=[1,2,3,4,5,6,7,8,9,10,15,20,25,30,40,50,60,70,80,90,100];
+  for(var d=1;d<=100;d++){
+    var o=calc(d,m,p);
+    stops.push('hsla('+h+',90%,50%,'+o+')');
+    if(show.indexOf(d)>=0){
+      var s=document.createElement('div');
+      s.className='swatch';
+      s.style.background='hsla('+h+',90%,50%,'+o+')';
+      s.textContent=d;
+      sw.appendChild(s);
+      info.push('d='+(d<10?' ':'')+d+' op='+o.toFixed(3));
+    }
+  }
+  document.getElementById('gradientBar').style.background='linear-gradient(to right,'+stops.join(',')+')';
+  document.getElementById('infoBox').textContent=info.join('\n');
+}
+mS.addEventListener('input',render);
+eS.addEventListener('input',render);
+cS.addEventListener('change',render);
+render();
+</script>
+</body>
+</html>

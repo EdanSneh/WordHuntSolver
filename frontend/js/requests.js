@@ -35,7 +35,6 @@ async function solve() {
     words = data.words || [];
     highlightedIdx = -1;
     activeLengths.clear();
-    paths.forEach(function(p) { activeLengths.add((p.tiles || []).length); });
     searchText = '';
     document.getElementById('searchInput').value = '';
     renderLengthFilters();

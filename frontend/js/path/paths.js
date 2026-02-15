@@ -48,39 +48,17 @@ function renderSVG() {
 
   if (highlightedIdx >= 0 && paths[highlightedIdx]) {
     var selectedPath = paths[highlightedIdx];
-
-    // Draw the selected hot zone path highlighted
-    if (selectedPath.tiles && selectedPath.tiles.length === 1) {
-      var hotColor = hslColor(selectedPath.color);
-      var pt = getTileCenter(selectedPath.tiles[0][0], selectedPath.tiles[0][1]);
-      var dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-      dot.setAttribute('cx', pt.x);
-      dot.setAttribute('cy', pt.y);
-      dot.setAttribute('r', '7');
-      dot.setAttribute('fill', hotColor);
-      dot.classList.add('highlighted');
-      svg.appendChild(dot);
-    } else if (selectedPath.tiles && selectedPath.tiles.length >= 2) {
-      var hotColor = hslColor(selectedPath.color);
-      var hotPoints = selectedPath.tiles.map(function(tc) {
-        var pt = getTileCenter(tc[0], tc[1]);
-        return pt.x + ',' + pt.y;
-      }).join(' ');
-
-      var hotLine = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
-      hotLine.setAttribute('points', hotPoints);
-      hotLine.setAttribute('stroke', hotColor);
-      hotLine.setAttribute('stroke-width', '7');
-      hotLine.setAttribute('stroke-opacity', '1');
-      hotLine.classList.add('highlighted');
-      svg.appendChild(hotLine);
-    }
-
-    // Draw associated word paths in red (skip the already-drawn selected word)
     var wordIdSet = new Set(selectedPath.word_ids || []);
     var wordColor = 'hsl(0, 85%, 50%)';
     var dimOpacity = hasSelectedWord ? '0.2' : '0.5';
 
+    // Create layers: word lines below, hot zone above
+    var wordLayer = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+    var hotLayer = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+    svg.appendChild(wordLayer);
+    svg.appendChild(hotLayer);
+
+    // Draw associated word paths in red (into word layer)
     words.forEach(function(word, idx) {
       if (!wordIdSet.has(word.id)) return;
       if (!word.tiles || word.tiles.length < 2) return;
@@ -96,7 +74,7 @@ function renderSVG() {
       polyline.setAttribute('stroke', wordColor);
       polyline.setAttribute('stroke-width', '3.5');
       polyline.setAttribute('stroke-opacity', dimOpacity);
-      svg.appendChild(polyline);
+      wordLayer.appendChild(polyline);
 
       var startPt = getTileCenter(word.tiles[0][0], word.tiles[0][1]);
       var label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
@@ -107,8 +85,37 @@ function renderSVG() {
       label.setAttribute('font-weight', '700');
       label.setAttribute('opacity', hasSelectedWord ? '0.25' : '0.6');
       label.textContent = word.label;
-      svg.appendChild(label);
+      wordLayer.appendChild(label);
     });
+
+    // Draw the selected hot zone path highlighted (into hot layer, on top)
+    if (selectedPath.tiles && selectedPath.tiles.length === 1) {
+      var hotColor = hslColor(selectedPath.color);
+      var pt = getTileCenter(selectedPath.tiles[0][0], selectedPath.tiles[0][1]);
+      var dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      dot.setAttribute('cx', pt.x);
+      dot.setAttribute('cy', pt.y);
+      dot.setAttribute('r', '10');
+      dot.setAttribute('fill', hotColor);
+      dot.setAttribute('stroke', '#fff');
+      dot.setAttribute('stroke-width', '2');
+      dot.classList.add('highlighted');
+      hotLayer.appendChild(dot);
+    } else if (selectedPath.tiles && selectedPath.tiles.length >= 2) {
+      var hotColor = hslColor(selectedPath.color);
+      var hotPoints = selectedPath.tiles.map(function(tc) {
+        var pt = getTileCenter(tc[0], tc[1]);
+        return pt.x + ',' + pt.y;
+      }).join(' ');
+
+      var hotLine = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+      hotLine.setAttribute('points', hotPoints);
+      hotLine.setAttribute('stroke', hotColor);
+      hotLine.setAttribute('stroke-width', '7');
+      hotLine.setAttribute('stroke-opacity', '1');
+      hotLine.classList.add('highlighted');
+      hotLayer.appendChild(hotLine);
+    }
   } else if (!hasSelectedWord) {
     // Default: draw hot zone paths (only if no word is selected either)
     var range = getVisibleDarknessRange();

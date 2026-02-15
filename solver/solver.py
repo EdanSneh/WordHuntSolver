@@ -58,7 +58,7 @@ class BoardSolver:
         results = []
         colors = [color for color in Color]
         for key, value in hot_zone_dict.items():
-            path_size = len(key)
+            path_size = len(key) - 1
             color = colors[path_size % len(colors)]
             result = PathResult(
                 id=0,
