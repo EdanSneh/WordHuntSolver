@@ -297,7 +297,7 @@ body {
 }
 .path-brightness {
   font-size: 11px;
-  color: #667;
+  color: rgb(255, 255, 255);
   flex-shrink: 0;
   min-width: 28px;
   text-align: right;

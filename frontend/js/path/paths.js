@@ -5,8 +5,8 @@ function getVisibleDarknessRange() {
   var minD = Infinity, maxD = -Infinity;
   paths.forEach(function(path) {
     if (!isPathVisible(path)) return;
-    if (path.darkness < minD) minD = path.darkness;
-    if (path.darkness > maxD) maxD = path.darkness;
+    if (path.total_count < minD) minD = path.total_count;
+    if (path.total_count > maxD) maxD = path.total_count;
   });
   if (minD === Infinity) { minD = 0; maxD = 1; }
   return { minD: minD, maxD: maxD };
@@ -75,17 +75,6 @@ function renderSVG() {
       polyline.setAttribute('stroke-width', '3.5');
       polyline.setAttribute('stroke-opacity', dimOpacity);
       wordLayer.appendChild(polyline);
-
-      var startPt = getTileCenter(word.tiles[0][0], word.tiles[0][1]);
-      var label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-      label.setAttribute('x', startPt.x + 12);
-      label.setAttribute('y', startPt.y - 10);
-      label.setAttribute('fill', wordColor);
-      label.setAttribute('font-size', '12');
-      label.setAttribute('font-weight', '700');
-      label.setAttribute('opacity', hasSelectedWord ? '0.25' : '0.6');
-      label.textContent = word.label;
-      wordLayer.appendChild(label);
     });
 
     // Draw the selected hot zone path highlighted (into hot layer, on top)
@@ -116,6 +105,17 @@ function renderSVG() {
       hotLine.classList.add('highlighted');
       hotLayer.appendChild(hotLine);
     }
+
+    // Draw label for selected path
+    var labelPt = getTileCenter(selectedPath.tiles[0][0], selectedPath.tiles[0][1]);
+    var pathLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    pathLabel.setAttribute('x', labelPt.x + 12);
+    pathLabel.setAttribute('y', labelPt.y - 10);
+    pathLabel.setAttribute('fill', hslColor(selectedPath.color));
+    pathLabel.setAttribute('font-size', '14');
+    pathLabel.setAttribute('font-weight', '700');
+    pathLabel.textContent = selectedPath.label || '';
+    hotLayer.appendChild(pathLabel);
   } else if (!hasSelectedWord) {
     // Default: draw hot zone paths (only if no word is selected either)
     var range = getVisibleDarknessRange();
@@ -123,7 +123,7 @@ function renderSVG() {
       if (!path.tiles || path.tiles.length < 1) return;
       if (!isPathVisible(path)) return;
       var color = hslColor(path.color);
-      var opacity = darknessToOpacity(path.darkness, range.minD, range.maxD);
+      var opacity = darknessToOpacity(path.total_count, range.minD, range.maxD);
 
       if (path.tiles.length === 1) {
         var pt = getTileCenter(path.tiles[0][0], path.tiles[0][1]);
@@ -148,16 +148,6 @@ function renderSVG() {
         svg.appendChild(polyline);
       }
 
-      var startPt = getTileCenter(path.tiles[0][0], path.tiles[0][1]);
-      var label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-      label.setAttribute('x', startPt.x + 12);
-      label.setAttribute('y', startPt.y - 10);
-      label.setAttribute('fill', color);
-      label.setAttribute('font-size', '11');
-      label.setAttribute('font-weight', '700');
-      label.setAttribute('opacity', String(opacity));
-      label.textContent = path.label || '';
-      svg.appendChild(label);
     });
   }
 
@@ -235,7 +225,7 @@ function renderPathList() {
     var swatch = document.createElement('span');
     swatch.className = 'color-swatch';
     swatch.style.background = hslColor(path.color);
-    swatch.style.opacity = darknessToOpacity(path.darkness, range.minD, range.maxD);
+    swatch.style.opacity = darknessToOpacity(path.total_count, range.minD, range.maxD);
 
     var labelSpan = document.createElement('span');
     labelSpan.className = 'path-label';
@@ -243,14 +233,11 @@ function renderPathList() {
 
     var wordSpan = document.createElement('span');
     wordSpan.className = 'path-word';
-    var word = (path.tiles || []).map(function(tc) {
-      return (grid[tc[0]] && grid[tc[0]][tc[1]]) ? grid[tc[0]][tc[1]] : '?';
-    }).join('');
-    wordSpan.textContent = word;
+    wordSpan.textContent = path.label.split('').reverse().join('') + ' (' + path.reverse_count + ')';
 
     var brSpan = document.createElement('span');
     brSpan.className = 'path-brightness';
-    brSpan.textContent = path.darkness;
+    brSpan.textContent = path.total_count;
 
     li.appendChild(swatch);
     li.appendChild(labelSpan);

@@ -1,3 +1,4 @@
+from dataclasses import dataclass, field
 from enum import Enum
 
 from pydantic import BaseModel
@@ -11,6 +12,14 @@ class Color(str, Enum):
     BLUE = "BLUE"
     PURPLE = "PURPLE"
     PINK = "PINK"
+
+
+@dataclass
+class HotZone:
+    label: str
+    total_count: int = 0
+    reverse_count: int = 0
+    word_ids: set = field(default_factory=set)
 
 
 class SolveRequest(BaseModel):
@@ -27,7 +36,8 @@ class WordResult(BaseModel):
 class PathResult(BaseModel):
     id: int
     tiles: list[list[int]]  # list of [row, col] pairs forming the path
-    darkness: int  # 1-100, controls line color darkness (higher = darker)
+    total_count: int  # 1-100, controls line color darkness (higher = darker)
+    reverse_count: int  # number of times the path reverses direction
     color: Color  # line color
     label: str  # display label (typically the word found)
     word_ids: list[int]  # IDs of associated WordResults
