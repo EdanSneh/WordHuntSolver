@@ -1,3 +1,4 @@
+from audioop import reverse
 from functools import cached_property
 from typing import Tuple
 
@@ -84,9 +85,9 @@ class BoardSolver:
             has_seen.append([False] * self.size)
         for y in range(self.size):
             for x in range(self.size):
-                self._bfs((x, y), [(x, y)], self.grid[x][y], has_seen)
+                self._dfs((x, y), [(x, y)], self.grid[x][y], has_seen)
 
-    def _bfs(
+    def _dfs(
         self,
         node: Tuple[int, int],
         path: list[Tuple[int, int]],
@@ -106,7 +107,7 @@ class BoardSolver:
         for edge in edges:
             if not has_seen[edge[0]][edge[1]]:
                 path.append(edge)
-                self._bfs(edge, path, strpath + self.grid[edge[0]][edge[1]], has_seen)
+                self._dfs(edge, path, strpath + self.grid[edge[0]][edge[1]], has_seen)
                 path.pop()
         has_seen[node[0]][node[1]] = False
 
