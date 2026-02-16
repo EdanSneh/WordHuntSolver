@@ -18,5 +18,5 @@ from app.routes import register_routes  # noqa: E402
 
 register_routes(app)
 
-frontend_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "frontend")
+frontend_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "frontend")
 app.mount("/", StaticFiles(directory=frontend_dir, html=True), name="frontend")

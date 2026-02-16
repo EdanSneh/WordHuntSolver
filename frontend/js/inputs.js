@@ -26,8 +26,8 @@ document.getElementById('hiddenInput').addEventListener('keydown', function(e) {
       retreatCursor();
     }
     grid[selectedRow][selectedCol] = '';
+    clearPaths();
     renderBoard();
-    renderSVG();
     saveState();
     return;
   }
@@ -50,9 +50,9 @@ document.getElementById('hiddenInput').addEventListener('keydown', function(e) {
   if (/^[a-zA-Z]$/.test(e.key)) {
     e.preventDefault();
     grid[selectedRow][selectedCol] = e.key.toUpperCase();
+    clearPaths();
     advanceCursor();
     renderBoard();
-    renderSVG();
     saveState();
     return;
   }

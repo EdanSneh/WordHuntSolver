@@ -3,6 +3,9 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 
+import os
+
+
 @dataclass
 class TrieNode:
     children: dict[str, TrieNode] = field(default_factory=dict)
@@ -16,7 +19,8 @@ class Trie:
     @staticmethod
     def get_instance() -> Trie:
         if Trie._instance is None:
-            filename = "solver/words.txt"
+            project_root = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+            filename = os.path.join(project_root, "data", "words.txt")
             Trie._instance = Trie()
             with open(filename, "r") as f:
                 for line in f:
