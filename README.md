@@ -13,6 +13,10 @@ This tool analyzes a Word Hunt board and identifies **hot zones** — tile seque
 3. **Hot zone analysis** — Every sub-path (contiguous segment of a word's path) is extracted and counted. Paths that appear in many different words surface as hot zones, ranked by frequency.
 4. **Visualization** — Hot zones are drawn as colored overlays on the board with opacity scaled by frequency. Clicking a hot zone shows which words pass through it, and clicking a word shows its full trace with directional arrows.
 
+
+
+![Word Hunt Solver](data/board.png)
+
 ## Design
 
 **Backend** — Python with FastAPI. The solver uses a trie built from a dictionary file for prefix-based pruning during DFS traversal. Hot zone computation extracts all sub-paths from every valid word and aggregates them, merging reversed duplicates. The API returns both the word list and hot zone data in a single response.
