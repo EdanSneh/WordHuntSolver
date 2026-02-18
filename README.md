@@ -23,11 +23,7 @@ This tool analyzes a Word Hunt board and identifies **hot zones** — tile seque
 
 **Frontend** — Vanilla HTML/CSS/JavaScript with no build step or framework. The board is rendered as a CSS grid, paths are drawn as SVG polylines overlaid on the board, and all state lives in global variables. Scripts are split by concern (board rendering, path drawing, input handling, sounds, etc.) and loaded via individual `<script>` tags.
 
-**Data** — The word dictionary (`data/words.txt`) is the [ENABLE](https://norvig.com/ngrams/enable1.txt) (Enhanced North American Benchmark Lexicon) word list, uppercased. It is loaded once into a singleton trie on first solve request and reused for subsequent requests. To download it:
-
-```bash
-curl -sL "https://norvig.com/ngrams/enable1.txt" | tr '[:lower:]' '[:upper:]' > data/words.txt
-```
+**Data** — The word dictionary (`data/words.txt`) is the [Collins Scrabble 2019 Dictionary](https://drive.google.com/file/d/1oGDf1wjWp5RF_X9C7HoedhIWMh5uJs8s/view). I found it to be relatively similar to the in-game word dictionary.
 
 
 ## How to Run
