@@ -1,0 +1,128 @@
+name: Build and Release Executables
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Enter the version (e.g., v1.0.0)"
+        required: true
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.x"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install Python dependencies
+        run: pip install -r requirements.txt pyinstaller
+
+      - name: Install Node dependencies
+        run: npm install
+
+      - name: Build backend binary
+        run: pyinstaller wordhunt-backend.spec --distpath build/backend --clean
+
+      - name: Test backend binary (Unix)
+        if: runner.os != 'Windows'
+        run: |
+          chmod +x build/backend/wordhunt-backend
+          ./build/backend/wordhunt-backend 8099 &
+          for i in $(seq 1 30); do
+            if curl -s http://127.0.0.1:8099/health | grep -q ok; then
+              echo "Backend is healthy"
+              kill %1
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "Backend failed to start"
+          kill %1 2>/dev/null
+          exit 1
+
+      - name: Test backend binary (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          Start-Process -FilePath "build\backend\wordhunt-backend.exe" -ArgumentList "8099" -NoNewWindow
+          for ($i = 1; $i -le 30; $i++) {
+            try {
+              $response = Invoke-RestMethod -Uri "http://127.0.0.1:8099/health"
+              if ($response.status -eq "ok") {
+                Write-Host "Backend is healthy"
+                Stop-Process -Name "wordhunt-backend" -Force
+                exit 0
+              }
+            } catch {}
+            Start-Sleep -Seconds 1
+          }
+          Write-Host "Backend failed to start"
+          Stop-Process -Name "wordhunt-backend" -Force -ErrorAction SilentlyContinue
+          exit 1
+
+      - name: Build Electron app
+        run: npx electron-builder --publish never
+
+      - name: Rename artifacts
+        run: |
+          if [[ "$RUNNER_OS" == "Windows" ]]; then
+            mv "dist/Word Hunt Solver Setup 1.0.0.exe" dist/WordHuntSolver-windows.exe
+          elif [[ "$RUNNER_OS" == "Linux" ]]; then
+            mv dist/Word\ Hunt\ Solver-1.0.0.AppImage dist/WordHuntSolver-linux.AppImage
+          elif [[ "$RUNNER_OS" == "macOS" ]]; then
+            mv dist/Word\ Hunt\ Solver-1.0.0-arm64.dmg dist/WordHuntSolver-macos.dmg
+          fi
+        shell: bash
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-${{ matrix.os }}
+          path: |
+            dist/WordHuntSolver-*
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download all build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          merge-multiple: true
+
+      - name: List downloaded files
+        run: ls -R
+
+      - name: Make files executable (Linux)
+        run: chmod +x WordHuntSolver-linux.AppImage || true
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event.inputs.version }}
+          name: Release ${{ github.event.inputs.version }}
+          draft: false
+          prerelease: false
+          files: |
+            WordHuntSolver-linux.AppImage
+            WordHuntSolver-windows.exe
+            WordHuntSolver-macos.dmg
