@@ -1,0 +1,16 @@
+{
+  "name": "wordhunt",
+  "version": "1.0.0",
+  "description": "Word Hunt Solver",
+  "main": "electron/main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron ."
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "electron": "^40.6.0"
+  }
+}
