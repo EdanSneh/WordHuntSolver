@@ -26,6 +26,17 @@ This tool analyzes a Word Hunt board and identifies **hot zones** — tile seque
 **Data** — The word dictionary (`data/words.txt`) is the [Collins Scrabble 2019 Dictionary](https://drive.google.com/file/d/1oGDf1wjWp5RF_X9C7HoedhIWMh5uJs8s/view). I found it to be relatively similar to the in-game word dictionary.
 
 
+## Download
+
+Pre-built apps are available on the [Releases](../../releases) page. Download the file for your operating system:
+
+- **macOS** — `WordHuntSolver-macos.dmg` — Open the `.dmg` and drag the app to your Applications folder.
+  > **Note:** macOS may block the app because it is not signed. To open it: try opening the app once (it will be blocked), then go to **System Settings → Privacy & Security**, scroll down, and click **Open Anyway**.
+- **Windows** — `WordHuntSolver-windows.exe` — Run the installer and follow the prompts.
+- **Linux** — `WordHuntSolver-linux.AppImage` — Make it executable (`chmod +x`) and double-click to run.
+
+No programming tools or setup required.
+
 ## How to Run
 
 ```bash
