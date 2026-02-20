@@ -19,8 +19,11 @@ class Trie:
     @staticmethod
     def get_instance() -> Trie:
         if Trie._instance is None:
-            project_root = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
-            filename = os.path.join(project_root, "data", "words.txt")
+            data_dir = os.environ.get('WORDHUNT_DATA_DIR')
+            if data_dir is None:
+                project_root = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+                data_dir = os.path.join(project_root, "data")
+            filename = os.path.join(data_dir, "words.txt")
             Trie._instance = Trie()
             with open(filename, "r") as f:
                 for line in f:
